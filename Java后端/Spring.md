@@ -88,6 +88,65 @@ setter注入和构造器注入，分别是调用类的set方法和有参构造
 5. 初始化之后的操作（由后置处理器负责）
 6. IOC容器关闭时销毁
 
+#### 3.2.3工厂bean
+
+**概念**
+
+​		FactoryBean是Spring提供的一种整合第三方框架的常用机制。
+​		和普通的bean不同，配置一个FactoryBean类型的bean，在获取bean的时候得到的并不是class属性中配置的这个类的对象，而是getObject()方法的返回值。
+​		通过这种机制，Spring可以帮我们把复杂组件创建的详细过程和繁琐细节都屏蔽起来，只把最简洁的使用界面展示给我们。
+​		将来我们整合Mybatis时，Spring就是通过FactoryBean机制来帮我们创建SqlSessionFactory对象的。
+
+```
+一句话：IOC容器会创建工厂bean getObject方法返回的实例类型，不会去创建工厂bean的实例。这样我们直接从ioc容器中获取工厂创建的实例对象
+```
+
+**实现FactoryBean接口**
+
+接口中的三个方法：
+
+1. getObject():返回一个对象给IOC容器
+2. getObjectType():设置所提供对象的类型
+3. isSingleton():所提供的对象是否为单例
+
+当把FactoryBean的实现类配置为bean时，会将当前类中的getObject方法返回的对象交给IOC容器管理
+
+#### 3.2.4自动装配
+
+**概念**
+
+根据指定的策略，在IOC容器中匹配某个bean，自动为为bean中的类类型的属性或者接口类型的属性赋值
+
+**实现**
+
+可以通过bean标签的autowire属性设置自动装配的策略
+
+自动装配的策略：
+
+1. no,default：表示不装配，即bean中的属性不会自动匹配某个bean为某个属性赋值
+
+2. byType：根据赋值的属性的类型，在IOC容器中匹配某个bean为属性赋值
+
+	异常情况：
+
+	IOC中一个类型都匹配不上：属性就不会装配，使用默认值
+
+	有多个类型的bean，此时会抛出异常
+
+	总结：当使用ByType实现自动装配时，IOC容器中有且仅有一个类型匹配的bean能够为属性赋值
+
+3. byName：将要赋值的属性的属性名作为bean的id在IOC容器中匹配某个bean，为属性赋值
+
+4. 总结：一般使用byType。特殊情况下：当类型匹配的bean有多个时，此时可以使用byName实现自动装配
+
+#### 3.2.5总结
+
+![容器相关](图片资源/Spring-容器相关.png)
+
+![Bean相关](图片资源/Spring-Bean相关.png)
+
+![依赖注入相关](图片资源/Spring-依赖注入相关.png)
+
 
 
 ## 4.IOC-基于注解管理Bean
