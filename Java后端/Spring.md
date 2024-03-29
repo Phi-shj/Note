@@ -151,6 +151,52 @@ setter注入和构造器注入，分别是调用类的set方法和有参构造
 
 ## 4.IOC-基于注解管理Bean
 
+### 4.1使用注解注册bean组件
+
+1. @Component：将类标识为普通组件
+2. @Controller：将类标识为控制层组件
+3. @Service：将类标识为业务层组件
+4. @Repository：将类标识为持久层组件
+
+- 在service层和dao层，注解应该标识在接口的实现类上
+- 加了注解的类在IOC容器中的**默认id为类名的小驼峰**
+
+### 4.2@Autowired自动装配
+
+**能够标识的位置**
+
+1. 成员变量上，此时不需要设置成员变量的set方法
+2. set方法上
+3. 为当前成员变量赋值的有参构造器上
+
+**注入方式**
+
+@Autowired默认通过byType方式自动注入，在IOC容器中通过类型匹配某个bean为属性赋值
+
+若有多个类型匹配的bean，此时会自动转化为byName的方式来实现自动装配的效果
+
+即将要赋值的属性的属性名作为bean的id匹配某个bean为属性赋值
+
+若byType和byName的方式都无法实现自动装配，即IOC容器中有多个类型匹配的bean，且这些bean的id和要复制的属性的属性名都不一致，此时抛异常。
+
+此时可以在要赋值的属性上，添加一个注解@Qualifier("value")通过该注解的value属性值，指定某个bean的id，然后将这个bean为属性赋值
+
+```
+注意：若IOC容器中没有任何一个类型匹配bean，此时抛出异常：NoSuchBeanDefinitionException
+在@Autowired注解中有个required属性，默认值为true，要求必须完成自动装配
+可以将required设置为false，此时能装配则装配，无法装配则使用属性的默认值
+```
+
+### 4.3总结
+
+![XML配置对比注解配置](图片资源/Spring-XML配置对比注解配置.png)
+
+![Spring整合MyBatis1](图片资源/Spring-Spring整合MyBatis1.png)
+
+![Spring整合MyBatis2](图片资源/Spring-Spring整合MyBatis2.png)
+
+![整合JUnit](图片资源/Spring-整合JUnit.png)
+
 ## 5.AOP-概念
 
 ## 6.AOP-基于注解的AOP
