@@ -199,7 +199,356 @@ setter注入和构造器注入，分别是调用类的set方法和有参构造
 
 ## 5.AOP-概念
 
+### 5.1代理模式
+
+二十三种设计模式中的一种，属于结构型模式。它的作用就是通过提供一个代理类，让我们在调用目标方法的时候，不再是直接对目标方法进行调用，而是通过代理类间接调用。
+
+让不属于目标方法核心逻辑的代码从目标方法中剥离出来——解耦。调用目标方法时先调用代理对象的方法，减少对目标方法的调用和打扰，同时让附加功能能够集中在一起也有利于统一维护。
+
+### 5.2AOP概念及相关术语
+
+**AOP**
+
+AOP（Aspect Oriented Programming）面向切面编程，是一种设计思想，是面向对象编程的一种补充和完善。它以通过预编译方式和运行期动态代理方式实现在不修改源代码的情况下给程序动态统一添加额外功能的一种技术
+
+简单来说：就是把非核心业务抽取出来，给切面类管理。再把抽取出来的放到相应的位置。
+
+##### 横切关注点
+
+从目标对象中抽取出来的非核心业务，比如之前代理模式中的日志功能，针对于计算器功能来说，日志就是非核心业务。
+
+这个概念不是语法层面天然存在的，而是根据附加功能的逻辑上的需要：有十个附加功能，就有十个横切关注点。
+
+**通知**
+
+非核心的业务再目标对象中叫做横切关注点，将横切关注点抽取出来封装到切面类中，他就是这个类中的一个方法叫做通知。
+
+每一个横切关注点要做的事情都封装成一个方法，这样的方法就叫做通知方法。
+
+1. 前置通知：在被代理的目标方法前执行
+2. 返回通知：在被代理的目标方法成功结束后执行（寿终正寝）
+3. 异常通知：在被代理的目标方法异常结束后执行（死于非命）
+4. 后置通知：在被代理的目标方法最终结束后执行（盖棺定论）
+5. 环绕通知：使用try…catch…finally结构围绕整个被代理的目标方法，包括上面四种通知对应的所有位置
+
+##### 切面
+
+封装横切关注点的类，通知的方法都写在切面类中
+
+##### 目标
+
+被代理的目标对象，比如计算器的实现类
+
+##### 代理
+
+代理对象
+
+##### 连接点
+
+一个纯逻辑的概念：抽取横切关注点的位置，比如方法执行之前，方法捕获异常的时候等等。
+
+连接点的作用：我们不但要抽取出来，还要套回去。
+
+##### 总结
+
+抽和套，抽取出来横切关注点，封装到切面中，就是一个通知。然后通过切入点找到连接点，把通知套到连接点的位置。
+
+### 5.3总结
+
+![AOP核心概念1](图片资源/Spring-AOP核心概念1.png)
+
+![AOP核心概念2](图片资源/Spring-AOP核心概念2.png)
+
+![AOP核心概念3](图片资源/Spring-AOP核心概念3.png)
+
 ## 6.AOP-基于注解的AOP
+
+### 6.1技术说明
+
+1. 动态代理（InvocationHandler）：JDK原生的实现方式，需要被代理的目标类必须实现接口。因为这个技术要求代理对象和目标对象实现同样的接口（兄弟两个拜把子模式）。
+2. cglib：通过继承被代理的目标类（认干爹模式）实现代理，所以不需要目标类实现接口。
+3. AspectJ：本质上是静态代理，将代理逻辑“织入”被代理的目标类编译得到的字节码文件，所以最终效果是动态的。weaver就是织入器。Spring只是借用了AspectJ中的注解。
+
+### 6.2切面类
+
+1. 在切面中，需要通过指定的注解将方法标识为通知方法
+
+	- @Before：前置通知，在目标方法执行之前执行
+	- @After：后置通知，在目标对象方法的finally子句中执行
+	- @AfterReturning：返回通知，在目标对象方法返回值之后执行
+	- @AfterThrowing：异常通知，在目标对象方法的catch子句中执行
+	- @Around：环绕通知
+
+2. 切入点表达式：设置在表示通知的注解的value属性中
+
+	```
+	* "execution(public int com.zylai.spring.aop.annotation.CalculatorImpl.add(int,int))"
+	* "execution(* com.zylai.spring.aop.annotation.*.*(..))"
+	* 第一个*表示任意的访问修饰符和返回值类型
+	* 第二个*表示包下所有的类
+	* 第三个*表示类中任意的方法
+	* ..表示任意的参数列表
+	```
+
+3. 重用连接点表达式
+
+	```
+	* //声明一个公共的切入点表达式
+	* @Pointcut("execution(* com.zylai.spring.aop.annotation.CalculatorImpl.*(..))")
+	* public void pointCut(){}
+	* 使用方式：  @After("pointCut()")
+	```
+
+4. 获取连接点信息
+
+	```
+	* 在通知方法的参数位置，设置JoinPoint类型的参数，就可以获取连接点所对应的方法信息
+	*  //获取连接点对应方法的签名信息
+	*  Signature signature = joinPoint.getSignature();
+	*  //获取连接点所对应的参数
+	*  Object[] args = joinPoint.getArgs();
+	```
+
+5. 切面的优先级
+
+	```
+	*  可以通过@Order注解的value属性设置优先级，默认值为Integer.MAX
+	*  value值越小优先级越高
+	```
+
+**总的**
+
+```java
+* 1. 在切面中，需要通过指定的注解将方法标识为通知方法
+*
+* 2. 切入点表达式：设置在表示通知的注解的value属性中
+* "execution(public int com.zylai.spring.aop.annotation.CalculatorImpl.add(int,int))"
+* "execution(* com.zylai.spring.aop.annotation.*.*(..))"
+* 第一个*表示任意的访问修饰符和返回值类型
+* 第二个*表示包下所有的类
+* 第三个*表示类中任意的方法
+* ..表示任意的参数列表
+*
+* 3.重用连接点表达式
+* //声明一个公共的切入点表达式
+* @Pointcut("execution(* com.zylai.spring.aop.annotation.CalculatorImpl.*(..))")
+* public void pointCut(){}
+* 使用方式：  @After("pointCut()")
+*
+* 4. 获取连接点信息
+* 在通知方法的参数位置，设置JoinPoint类型的参数，就可以获取连接点所对应的方法信息
+*  //获取连接点对应方法的签名信息
+*  Signature signature = joinPoint.getSignature();
+*  //获取连接点所对应的参数
+*  Object[] args = joinPoint.getArgs();
+*
+*  5.切面的优先级
+*  可以通过@Order注解的value属性设置优先级，默认值为Integer.MAX
+*  value值越小优先级越高
+
+@Component
+@Aspect//将当前组件表示为切面
+public class LoggerAspect {
+
+    @Pointcut("execution(* com.zylai.spring.aop.annotation.CalculatorImpl.*(..))")
+    public void pointCut(){}
+
+
+//    @Before("execution(public int com.zylai.spring.aop.annotation.CalculatorImpl.add(int,int))")
+    //表示这个类下所有的方法，用*表示所有，参数列表用..表示所有的参数列表
+//    @Before("execution(* com.zylai.spring.aop.annotation.CalculatorImpl.*(..))")
+    @Before("pointCut()")
+    public void beforeAdviceMethod(JoinPoint joinPoint){
+        //获取连接点对应方法的签名信息（签名信息就是方法的声明信息）
+        Signature signature = joinPoint.getSignature();
+        //获取连接点所对应的参数
+        Object[] args = joinPoint.getArgs();
+        System.out.println("LoggerAspect，前置通知，方法："+signature.getName()+",参数："+ Arrays.toString(args));
+    }
+
+    @After("pointCut()")
+    public void afterAdviceMethod(JoinPoint joinPoint){
+        //获取连接点对应方法的签名信息（签名信息就是方法的声明信息）
+        Signature signature = joinPoint.getSignature();
+        System.out.println("LoggerAspect，后置通知，方法："+signature.getName()+"，执行完毕");
+    }
+
+    //在返回通知中若要获取目标对象方法的返回值，只需要通过注解的returning属性值
+    //就可以将通知方法的某个参数指定为接收目标对象方法的返回值
+    @AfterReturning(value = "pointCut()",returning = "result")
+    public void afterReturningAdviceMethod(JoinPoint joinPoint, Object result){
+        Signature signature = joinPoint.getSignature();
+        System.out.println("LoggerAspect，返回通知，方法："+signature.getName()+"，结果："+result);
+    }
+
+    //在返回通知中若要获取目标对象方法的异常，只需要通过注解的throwing属性值
+    //就可以将通知方法的某个参数指定为接收目标对象方法出现的异常
+    @AfterThrowing(value = "pointCut()",throwing = "ex")
+    public void afterThrowingAdviceMethod(JoinPoint joinPoint,Throwable ex){
+        Signature signature = joinPoint.getSignature();
+        System.out.println("LoggerAspect，异常通知，方法："+signature.getName()
+        +"异常："+ex);
+    }
+
+
+    @Around("pointCut()")
+    //环绕通知的方法返回值一定要和目标方法的返回值一致
+    public Object aroundAdviceMethod(ProceedingJoinPoint joinPoint){
+        Object result = null;
+        try {
+            System.out.println("环绕通知-->前置通知");
+            //表示目标对象方法的执行
+            result = joinPoint.proceed();
+            System.out.println("环绕通知-->返回通知");
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            System.out.println("环绕通知-->异常通知");
+        }finally {
+            System.out.println("环绕通知-->后置通知");
+        }
+        return result;
+    }
+}
+```
+
+### 6.3其他
+
+![AOP切入点表达式](图片资源/Spring-AOP切入点表达式.png)
+
+![@Around注意事项](图片资源/Spring-@Around注意事项.png)
+
+![AOP通知获取数据](图片资源/Spring-AOP通知获取数据.png)
+
+![AOP通知获取参数数据1](图片资源/Spring-AOP通知获取参数数据1.png)
+
+![AOP通知获取参数数据2](图片资源/Spring-AOP通知获取参数数据2.png)
+
+![AOP总结1](图片资源/Spring-AOP总结1.png)
+
+![AOP总结2](图片资源/Spring-AOP总结2.png)
+
+![AOP总结3](图片资源/Spring-AOP总结3.png)
 
 ## 7.声明式事务
 
+### 7.1事物的属性
+
+**只读**
+
+1. 介绍
+	对一个查询操作来说，如果我们把它设置成只读，就能够明确告诉数据库，这个操作不涉及写操作。这样数据库就能够针对查询操作来进行优化
+
+2. 使用方式
+
+	```
+	@Transactional(readOnly = true)
+	 public void buyBook(Integer userId, Integer bookId) {
+	        //查询图书的价格
+	        Integer price = bookDao.getPriceByBookId(bookId);
+	
+	        //更新图书的库存
+	        bookDao.updateStock(bookId);
+	        //更新用户的余额
+	        bookDao.updateBalance(userId,price);
+	    }
+	```
+
+3. 注意
+	对增删改操作设置只读会抛出下面异常：
+	Caused by: java.sql.SQLException: Connection is read-only. Queries leading to data modification are not allowed
+
+**超时**
+
+1. 介绍
+
+	事务在执行过程中，有可能因为遇到某些问题，导致程序卡住，从而长时间占用数据库资源。而长时间占用资源，大概率是因为程序运行出现了问题（可能是Java程序或MySQL数据库或网络连接等等）。
+	此时这个很可能出问题的程序应该被回滚，撤销它已做的操作，事务结束，把资源让出来，让其他正常程序可以执行。
+
+	概括来说就是一句话：超时回滚，释放资源。
+
+2. 使用方式
+
+	```
+	@Transactional(timeout = 3)
+	public void buyBook(Integer bookId, Integer userId) {
+	    try {
+	    TimeUnit.SECONDS.sleep(5);
+	    } catch (InterruptedException e) {
+	    e.printStackTrace();
+	    }
+	    //查询图书的价格
+	    Integer price = bookDao.getPriceByBookId(bookId);
+	    //更新图书的库存
+	    bookDao.updateStock(bookId);
+	    //更新用户的余额
+	    bookDao.updateBalance(userId, price);
+	    //System.out.println(1/0);
+	}
+	```
+
+3. 观察结果
+
+	执行过程中抛出异常：
+	org.springframework.transaction.TransactionTimedOutException: Transaction timed out:
+	deadline was Fri Jun 04 16:25:39 CST 2022
+
+**回滚策略**
+
+声明式事务默认对于运行时异常都进行回滚，一般使用的是在此基础上加上不因为哪个异常而回滚
+
+可以通过@Transactional中相关属性设置回滚策略
+rollbackFor属性：需要设置一个Class类型的对象
+rollbackForClassName属性：需要设置一个字符串类型的全类名
+noRollbackFor属性：需要设置一个Class类型的对象
+rollbackFor属性：需要设置一个字符串类型的全类名
+
+```
+@Transactional(noRollbackFor = ArithmeticException.class)
+//@Transactional(noRollbackForClassName = "java.lang.ArithmeticException")
+public void buyBook(Integer bookId, Integer userId) {
+    //查询图书的价格
+    Integer price = bookDao.getPriceByBookId(bookId);
+    //更新图书的库存
+    bookDao.updateStock(bookId);
+    //更新用户的余额
+    bookDao.updateBalance(userId, price);
+    System.out.println(1/0);
+}
+```
+
+**隔离级别**
+
+数据库系统必须具有隔离并发运行各个事务的能力，使它们不会相互影响，避免各种并发问题。一个事务与其他事务隔离的程度称为隔离级别。SQL标准中规定了多种事务隔离级别，不同隔离级别对应不同的干扰程度，隔离级别越高，数据一致性就越好，但并发性越弱。
+
+隔离级别一共有四种：
+
+- 读未提交：READ UNCOMMITTED
+	允许Transaction01读取Transaction02未提交的修改。
+- 读已提交：READ COMMITTED、
+	要求Transaction01只能读取Transaction02已提交的修改。
+
+- 可重复读：REPEATABLE READ
+	确保Transaction01可以多次从一个字段中读取到相同的值，即Transaction01执行期间禁止其它事务对这个字段进行更新。
+
+- 串行化：SERIALIZABLE
+	确保Transaction01可以多次从一个表中读取到相同的行，在Transaction01执行期间，禁止其它事务对这个表进行添加、更新、删除操作。可以避免任何并发问题，但性能十分低下。
+
+使用
+
+```
+@Transactional(isolation = Isolation.DEFAULT)//使用数据库默认的隔离级别
+@Transactional(isolation = Isolation.READ_UNCOMMITTED)//读未提交
+@Transactional(isolation = Isolation.READ_COMMITTED)//读已提交
+@Transactional(isolation = Isolation.REPEATABLE_READ)//可重复读
+@Transactional(isolation = Isolation.SERIALIZABLE)//串行化
+```
+
+**事务传播**
+
+![事务传播行为](图片资源/Spring-事务传播行为.png)
+
+### 7.2总结
+
+![Spring事务角色](图片资源/Spring-Spring事务角色.png)
+
+![事务相关配置](图片资源/Spring-事务相关配置.png)
