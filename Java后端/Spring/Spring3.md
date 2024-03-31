@@ -1,11 +1,4 @@
-## Spring_day03
-
-**今日目标**
-
-> * 理解并掌握AOP相关概念
-> * 能够说出AOP的工作流程
-> * 能运用AOP相关知识完成对应的案例编写
-> * 重点掌握Spring的声明式事务管理
+# Spring
 
 ## 1，AOP简介
 
@@ -2606,7 +2599,7 @@ public class SpringConfig {
       
       }
       ```
-      
+  
 * 出现这个问题的原因是，Spring的事务只会对`Error异常`和`RuntimeException异常`及其子类进行事务回顾，其他的异常类型是不会回滚的，对应IOException不符合上述条件所以不回滚
       
     * 此时就可以使用rollbackFor属性来设置出现IOException异常不回滚

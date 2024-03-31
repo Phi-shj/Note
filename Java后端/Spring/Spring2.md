@@ -1,11 +1,4 @@
-## Spring_day02
-
-**今日目标**
-
-> * 掌握IOC/DI配置管理第三方bean
-> * 掌握IOC/DI的注解开发
-> * 掌握IOC/DI注解管理第三方bean
-> * 完成Spring与Mybatis及Junit的整合开发
+#  Spring
 
 ## 1，IOC/DI配置管理第三方bean
 
