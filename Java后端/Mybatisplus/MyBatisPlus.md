@@ -1,14 +1,4 @@
-## MyBatisPlus
-
-**今日目标**
-
-> 基于MyBatisPlus完成标准Dao的增删改查功能
->
-> 掌握MyBatisPlus中的分页及条件查询构建
->
-> 掌握主键ID的生成策略
->
-> 了解MyBatisPlus的代码生成器
+# MyBatisPlus
 
 ## 1，MyBatisPlus入门案例与简介
 
